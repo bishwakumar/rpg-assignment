@@ -2,10 +2,102 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type HelloWorldModel {
-  value: String!
+type Blog {
+  id: ID!
+  title: String!
+  content: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  author: User!
+  authorId: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type User {
+  id: ID!
+  email: String!
+  username: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  password: String!
+  blogs: [Blog!]!
+}
+
+type AuthResponse {
+  token: String!
+  user: User!
+}
+
+type NotificationMarker {
+  markerVersion: Int!
+  blogId: ID!
+  blog: Blog!
+  createdAt: DateTime!
+}
+
+type UserNotificationState {
+  userId: ID!
+  user: User!
+  lastSeenMarkerVersion: Int!
+  updatedAt: DateTime!
+}
+
+type UnreadCountResponse {
+  count: Int!
+  lastSeenMarkerVersion: Int!
+}
+
+type NotificationMarkerPayload {
+  markerVersion: Int!
+  blog: Blog!
+  createdAt: DateTime!
+  cursor: Int
 }
 
 type Query {
-  sayHello: HelloWorldModel!
+  me: User!
+  unreadMarkers: [NotificationMarker!]!
+  allMarkers: [NotificationMarker!]!
+  notificationState: UserNotificationState!
+  unreadNotificationCount: Int!
+  blogs: [Blog!]!
+  blog(id: ID!): Blog!
+}
+
+type Mutation {
+  register(input: RegisterInput!): AuthResponse!
+  login(input: LoginInput!): AuthResponse!
+  updateLastSeenMarkerVersion(markerVersion: Int!): UnreadCountResponse!
+  createBlog(input: CreateBlogInput!): Blog!
+  updateBlog(id: ID!, input: UpdateBlogInput!): Blog!
+  deleteBlog(id: ID!): Boolean!
+}
+
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateBlogInput {
+  title: String!
+  content: String!
+}
+
+input UpdateBlogInput {
+  title: String
+  content: String
+}
+
+type Subscription {
+  newNotificationMarker(cursor: Int): NotificationMarkerPayload!
 }
