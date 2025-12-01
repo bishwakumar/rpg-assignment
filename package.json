@@ -1,0 +1,10 @@
+{
+  "name": "rpg-assignment",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "start": "./start.sh"
+  }
+}
+
+
