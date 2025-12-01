@@ -1,11 +1,17 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+// Default remote Postgres URL (hard-coded fallback)
+// NOTE: Environment variables (DATABASE_URL) still take precedence over this.
+const DEFAULT_DATABASE_URL =
+  'postgresql://rpg_blog_user:d91zLUvjum5q7Ny08zBwBqnKiPmemGLj@dpg-d4m9j2npm1nc73cpgvl0-a.singapore-postgres.render.com/rpg_blog';
+
 // Helper function to parse DATABASE_URL (for Railway, Render, etc.)
 const getDbConfig = () => {
   // Support DATABASE_URL format (postgresql://user:password@host:port/database)
-  if (process.env.DATABASE_URL) {
+  const dbUrl = process.env.DATABASE_URL || DEFAULT_DATABASE_URL;
+  if (dbUrl) {
     try {
-      const url = new URL(process.env.DATABASE_URL);
+      const url = new URL(dbUrl);
       return {
         host: url.hostname,
         port: parseInt(url.port) || 5432,
@@ -18,7 +24,7 @@ const getDbConfig = () => {
     }
   }
 
-  // Fallback to individual environment variables
+  // Fallback to individual environment variables (kept mainly for local overrides)
   return {
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),

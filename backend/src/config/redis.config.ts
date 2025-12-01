@@ -1,6 +1,11 @@
 // Helper to parse REDIS_URL and get Redis connection options
 // Supports both REDIS_URL format and individual environment variables
 
+// Default remote Redis URL (hard-coded fallback)
+// NOTE: Environment variables (REDIS_URL) still take precedence over this.
+const DEFAULT_REDIS_URL =
+  'redis://default:AX0zAAIncDI3MDhjNWNhMGI2YTQ0NTkyOTU4YzIzNjI1MzRjNjUzNnAyMzIwNTE@set-octopus-32051.upstash.io:6379';
+
 export interface RedisConfig {
   host: string;
   port: number;
@@ -9,10 +14,11 @@ export interface RedisConfig {
 }
 
 export const getRedisConfig = (): RedisConfig => {
-  // Support REDIS_URL format (redis://:password@host:port or redis://host:port)
-  if (process.env.REDIS_URL) {
+  // Use env first, otherwise fall back to the hard-coded URL
+  const redisUrl = process.env.REDIS_URL || DEFAULT_REDIS_URL;
+  if (redisUrl) {
     try {
-      const url = new URL(process.env.REDIS_URL);
+      const url = new URL(redisUrl);
       return {
         host: url.hostname,
         port: parseInt(url.port) || 6379,
@@ -28,12 +34,10 @@ export const getRedisConfig = (): RedisConfig => {
     }
   }
 
-  // Fallback to individual environment variables
+  // Local override fallback (only used if both env + default URL fail)
   return {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6379'),
     password: process.env.REDIS_PASSWORD || undefined,
   };
 };
-
-
