@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Redis } from 'ioredis';
+import { getRedisConfig } from '../../config/redis.config';
 
 export interface BlogCreatedEvent {
   blogId: string;
@@ -14,10 +15,19 @@ export class NotificationQueueService implements OnModuleInit {
   private readonly QUEUE_NAME = 'blog_created_events';
 
   constructor() {
+    const redisConfig = getRedisConfig();
+
     this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD || undefined,
+      host: redisConfig.host,
+      port: redisConfig.port,
+      password: redisConfig.password,
+      ...(redisConfig.tls
+        ? {
+            tls: {
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
       enableReadyCheck: false,
       maxRetriesPerRequest: null,
       retryStrategy: (times) => {
