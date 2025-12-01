@@ -7,6 +7,7 @@ import { Blog } from '../blog/entities/blog.entity';
 import { NotificationMarker } from './entities/notification-marker.entity';
 import { UserNotificationState } from './entities/user-notification-state.entity';
 import { User } from '../auth/entities/user.entity';
+import { getRedisConfig } from '../config/redis.config';
 
 @Injectable()
 export class NotificationService implements OnModuleInit, OnModuleDestroy {
@@ -26,12 +27,22 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
     // Initialize PubSub for GraphQL subscriptions
     this.pubSub = new PubSub();
 
+    // Get Redis configuration (supports both REDIS_URL and individual env vars)
+    const redisConfig = getRedisConfig();
+
     // Initialize Redis client for publishing (separate connection)
     // Note: Must be separate from subscriber connection
     this.redis = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD || undefined,
+      host: redisConfig.host,
+      port: redisConfig.port,
+      password: redisConfig.password,
+      ...(redisConfig.tls
+        ? {
+            tls: {
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
       enableReadyCheck: false, // Disable ready check to avoid subscriber mode conflicts
       maxRetriesPerRequest: null, // Disable retries for publisher
       retryStrategy: (times) => {
@@ -52,9 +63,16 @@ export class NotificationService implements OnModuleInit, OnModuleDestroy {
     // Initialize Redis client for subscribing (separate connection)
     // This connection will be in subscriber mode
     this.redisSubscriber = new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD || undefined,
+      host: redisConfig.host,
+      port: redisConfig.port,
+      password: redisConfig.password,
+      ...(redisConfig.tls
+        ? {
+            tls: {
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
       enableReadyCheck: false, // Disable ready check
       maxRetriesPerRequest: null, // Disable retries for subscriber
       retryStrategy: (times) => {
